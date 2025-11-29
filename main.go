@@ -1,68 +1,133 @@
 package main
 
-import (
-	"bufio"
-	"fmt"
-	"os"
-	"strconv"
-	"strings"
-)
+import "fmt"
 
-func avg(g []int) float64 {
-	if len(g) == 0 {
-		return 0
-	}
-	sum := 0
-	for _, v := range g {
-		sum += v
-	}
-	return float64(sum) / float64(len(g))
-}
-
-func parseGrades(s string) []int {
-	out := []int{}
-	for _, f := range strings.Fields(s) {
-		if v, err := strconv.Atoi(f); err == nil {
-			out = append(out, v)
+func read(n int) [][]float64 {
+	m := make([][]float64, n)
+	for i := 0; i < n; i++ {
+		m[i] = make([]float64, n)
+		for j := 0; j < n; j++ {
+			fmt.Scan(&m[i][j])
 		}
 	}
-	return out
+	return m
+}
+
+func printM(m [][]float64) {
+	for i := range m {
+		for j := range m[i] {
+			fmt.Printf("%8.3f", m[i][j])
+		}
+		fmt.Println()
+	}
+}
+
+func add(a, b [][]float64) [][]float64 {
+	n := len(a)
+	r := make([][]float64, n)
+	for i := 0; i < n; i++ {
+		r[i] = make([]float64, n)
+		for j := 0; j < n; j++ {
+			r[i][j] = a[i][j] + b[i][j]
+		}
+	}
+	return r
+}
+
+func scalar(a [][]float64, k float64) [][]float64 {
+	n := len(a)
+	r := make([][]float64, n)
+	for i := 0; i < n; i++ {
+		r[i] = make([]float64, n)
+		for j := 0; j < n; j++ {
+			r[i][j] = a[i][j] * k
+		}
+	}
+	return r
+}
+
+func mul(a, b [][]float64) [][]float64 {
+	n := len(a)
+	r := make([][]float64, n)
+	for i := 0; i < n; i++ {
+		r[i] = make([]float64, n)
+		for j := 0; j < n; j++ {
+			s := 0.0
+			for t := 0; t < n; t++ {
+				s += a[i][t] * b[t][j]
+			}
+			r[i][j] = s
+		}
+	}
+	return r
+}
+
+/* Новые функции для разделения логики */
+
+func chooseOp() int {
+	var op int
+	fmt.Println("Выберите операцию:")
+	fmt.Println("1 = сложение")
+	fmt.Println("2 = умножение матрицы на число")
+	fmt.Println("3 = умножение матриц")
+	fmt.Println("0 = выход")
+	fmt.Scan(&op)
+	return op
+}
+
+func chooseSize() int {
+	var n int
+	fmt.Println("Размер (2 или 3):")
+	fmt.Scan(&n)
+	return n
+}
+
+func handleAdd(n int) {
+	fmt.Println("Матрица A:")
+	A := read(n)
+	fmt.Println("Матрица B:")
+	B := read(n)
+	fmt.Println("Результат A + B:")
+	printM(add(A, B))
+}
+
+func handleScalar(n int) {
+	fmt.Println("Матрица A:")
+	A := read(n)
+	fmt.Println("Число k:")
+	var k float64
+	fmt.Scan(&k)
+	fmt.Println("Результат A * k:")
+	printM(scalar(A, k))
+}
+
+func handleMul(n int) {
+	fmt.Println("Матрица A:")
+	A := read(n)
+	fmt.Println("Матрица B:")
+	B := read(n)
+	fmt.Println("Результат A * B:")
+	printM(mul(A, B))
 }
 
 func main() {
-	in := bufio.NewReader(os.Stdin)
-	students := map[string][]int{}
-
-	for {
-		fmt.Println("\n1=Добавить  2=Список  3=Фильтр по среднему  0=Выход")
-		fmt.Print("> ")
-		cmd, _ := in.ReadString('\n')
-		switch strings.TrimSpace(cmd) {
-		case "1":
-			fmt.Print("ФИО: ")
-			name, _ := in.ReadString('\n')
-			name = strings.TrimSpace(name)
-			fmt.Print("Оценки (через пробел): ")
-			line, _ := in.ReadString('\n')
-			students[name] = parseGrades(line)
-		case "2":
-			for name, g := range students {
-				fmt.Printf("%s -> %v  средний=%.2f\n", name, g, avg(g))
-			}
-		case "3":
-			fmt.Print("Порог (например 4): ")
-			line, _ := in.ReadString('\n')
-			t, _ := strconv.ParseFloat(strings.TrimSpace(line), 64)
-			for name, g := range students {
-				if avg(g) < t {
-					fmt.Printf("%s -> %.2f\n", name, avg(g))
-				}
-			}
-		case "0":
-			return
-		default:
-			fmt.Println("Неизвестная команда")
-		}
+	op := chooseOp()
+	if op == 0 {
+		return
+	}
+	n := chooseSize()
+	if n != 2 && n != 3 {
+		fmt.Println("Неподдерживаемый размер")
+		return
+	}
+	switch op {
+	case 1:
+		handleAdd(n)
+	case 2:
+		handleScalar(n)
+	case 3:
+		handleMul(n)
+	default:
+		fmt.Println("Неизвестная операция")
 	}
 }
- 
